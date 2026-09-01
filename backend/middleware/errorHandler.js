@@ -10,7 +10,9 @@ function errorHandler(error, request, response, next) {
     console.error('Request failed:', {
       name: error.name || 'Error',
       code: error.code || 'INTERNAL_ERROR',
-      status
+      status,
+      upstreamStatus: error.statusCode,
+      message: error.message
     });
   }
 

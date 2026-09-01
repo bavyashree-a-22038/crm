@@ -63,11 +63,10 @@ class CatalystSessionStore extends session.Store {
     if (!SESSION_ID_PATTERN.test(sessionId)) {
       throw new Error('Invalid session identifier.');
     }
-    const table = this.getTable();
-    for await (const row of table.getIterableRows()) {
-      if (row.SESSION_ID === sessionId) return row;
-    }
-    return null;
+    const result = await this.getCatalystApp().zcql().executeZCQLQuery(
+      `SELECT * FROM ${this.tableName} WHERE SESSION_ID = '${sessionId}'`
+    );
+    return result[0]?.[this.tableName] || null;
   }
 
   async upsertRow(sessionId, storedSession) {

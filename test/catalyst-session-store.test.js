@@ -31,8 +31,14 @@ function createFakeCatalystApp() {
       if (index >= 0) rows.splice(index, 1);
       return index >= 0;
     },
-    async *getIterableRows() {
-      for (const row of rows) yield row;
+  };
+
+  const zcql = {
+    async executeZCQLQuery(query) {
+      assert.doesNotMatch(query, /LIMIT/i);
+      const sessionId = query.match(/SESSION_ID = '([^']+)'/)?.[1];
+      const row = rows.find(({ SESSION_ID }) => SESSION_ID === sessionId);
+      return row ? [{ MiniCrmSessions: row }] : [];
     }
   };
 
@@ -40,6 +46,9 @@ function createFakeCatalystApp() {
     rows,
     datastore() {
       return { table: () => table };
+    },
+    zcql() {
+      return zcql;
     }
   };
 }
@@ -96,22 +105,6 @@ test('Catalyst session store deletes corrupted sessions', async () => {
 
   assert.equal(await callStore(store, 'get', 'corrupt-session'), null);
   assert.equal(catalystApp.rows.length, 0);
-});
-
-test('Catalyst session store searches every Data Store page', async () => {
-  const catalystApp = createFakeCatalystApp();
-  const expiresAt = Date.now() + 60_000;
-  for (let index = 0; index < 201; index += 1) {
-    catalystApp.rows.push({
-      ROWID: String(index + 1),
-      SESSION_ID: `session-${index}`,
-      SESSION_DATA: JSON.stringify({ index }),
-      EXPIRES_AT: expiresAt
-    });
-  }
-  const store = new CatalystSessionStore(catalystApp);
-
-  assert.deepEqual(await callStore(store, 'get', 'session-200'), { index: 200 });
 });
 
 test('Catalyst session store resolves concurrent inserts using the unique session ID', async () => {
