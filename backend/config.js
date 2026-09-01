@@ -1,5 +1,6 @@
 const DEFAULT_ACCOUNTS_URL = 'https://accounts.zoho.com';
 const DEFAULT_CRM_API_URL = 'https://www.zohoapis.com';
+const nodeEnv = process.env.APP_ENV || process.env.NODE_ENV || 'development';
 
 function normalizeUrl(value, fallback) {
   const url = new URL(value || fallback);
@@ -7,8 +8,8 @@ function normalizeUrl(value, fallback) {
 }
 
 const config = {
-  nodeEnv: process.env.APP_ENV || process.env.NODE_ENV || 'development',
-  port: Number.parseInt(process.env.PORT || '3000', 10),
+  nodeEnv,
+  port: Number.parseInt(process.env.PORT || (nodeEnv === 'production' ? '9000' : '3000'), 10),
   trustProxy: process.env.TRUST_PROXY === 'true',
   sessionSecret: process.env.SESSION_SECRET || 'local-development-only-change-me',
   catalystSessionTable: process.env.SESSION_TABLE || 'MiniCrmSessions',
