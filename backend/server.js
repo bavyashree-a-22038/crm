@@ -10,7 +10,7 @@ const analyticsRoutes = require('./routes/analytics');
 const moduleRoutes = require('./routes/modules');
 const recordRoutes = require('./routes/records');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
-const { createSessionStore } = require('./services/tokenStore');
+const { createSessionStore, withCatalystRequestContext } = require('./services/tokenStore');
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -66,6 +66,7 @@ async function createApp() {
   }));
   app.use(express.json({ limit: '1mb' }));
   app.use(requireSameOrigin);
+  app.use(withCatalystRequestContext);
   app.use(session({
     name: 'mini_crm_session',
     secret: config.sessionSecret,

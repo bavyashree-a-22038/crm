@@ -1,9 +1,16 @@
 const session = require('express-session');
+const { AsyncLocalStorage } = require('node:async_hooks');
 const catalyst = require('zcatalyst-sdk-node');
 
 const DEFAULT_SESSION_TABLE = 'MiniCrmSessions';
+const DEFAULT_SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 const TABLE_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_]*$/;
+const requestContext = new AsyncLocalStorage();
+
+function withCatalystRequestContext(request, response, next) {
+  requestContext.run(request, next);
+}
 
 class CatalystSessionStore extends session.Store {
   constructor(catalystApp, tableName = DEFAULT_SESSION_TABLE) {
@@ -12,19 +19,24 @@ class CatalystSessionStore extends session.Store {
       throw new Error('SESSION_TABLE must be a valid Catalyst table name.');
     }
     this.tableName = tableName;
-    this.table = catalystApp.datastore().table(tableName);
-    this.zcql = catalystApp.zcql();
+    this.getCatalystApp = typeof catalystApp === 'function' ? catalystApp : () => catalystApp;
   }
 
   get(sessionId, callback) {
     this.findRow(sessionId)
       .then(async (row) => {
         if (!row) return null;
-        if (Number(row.EXPIRES_AT) <= Date.now()) {
-          await this.table.deleteRow(row.ROWID);
+        const expiresAt = Number(row.EXPIRES_AT);
+        if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+          await this.getTable().deleteRow(row.ROWID);
           return null;
         }
-        return JSON.parse(row.SESSION_DATA);
+        try {
+          return JSON.parse(row.SESSION_DATA);
+        } catch {
+          await this.getTable().deleteRow(row.ROWID);
+          return null;
+        }
       })
       .then((storedSession) => callback(null, storedSession))
       .catch(callback);
@@ -38,7 +50,7 @@ class CatalystSessionStore extends session.Store {
 
   destroy(sessionId, callback = () => {}) {
     this.findRow(sessionId)
-      .then((row) => row ? this.table.deleteRow(row.ROWID) : undefined)
+      .then((row) => row ? this.getTable().deleteRow(row.ROWID) : undefined)
       .then(() => callback())
       .catch(callback);
   }
@@ -51,7 +63,7 @@ class CatalystSessionStore extends session.Store {
     if (!SESSION_ID_PATTERN.test(sessionId)) {
       throw new Error('Invalid session identifier.');
     }
-    const result = await this.zcql.executeZCQLQuery(
+    const result = await this.getCatalystApp().zcql().executeZCQLQuery(
       `SELECT * FROM ${this.tableName} WHERE SESSION_ID = '${sessionId}' LIMIT 1`
     );
     return result[0]?.[this.tableName] || null;
@@ -59,9 +71,10 @@ class CatalystSessionStore extends session.Store {
 
   async upsertRow(sessionId, storedSession) {
     const existingRow = await this.findRow(sessionId);
+    const table = this.getTable();
     const expiresAt = storedSession.cookie?.expires
       ? new Date(storedSession.cookie.expires).getTime()
-      : Date.now() + 24 * 60 * 60 * 1000;
+      : Date.now() + DEFAULT_SESSION_TTL_MS;
     const row = {
       SESSION_ID: sessionId,
       SESSION_DATA: JSON.stringify(storedSession),
@@ -69,10 +82,20 @@ class CatalystSessionStore extends session.Store {
     };
 
     if (existingRow) {
-      await this.table.updateRow({ ...row, ROWID: existingRow.ROWID });
+      await table.updateRow({ ...row, ROWID: existingRow.ROWID });
       return;
     }
-    await this.table.insertRow(row);
+    try {
+      await table.insertRow(row);
+    } catch (insertError) {
+      const concurrentlyInsertedRow = await this.findRow(sessionId);
+      if (!concurrentlyInsertedRow) throw insertError;
+      await table.updateRow({ ...row, ROWID: concurrentlyInsertedRow.ROWID });
+    }
+  }
+
+  getTable() {
+    return this.getCatalystApp().datastore().table(this.tableName);
   }
 }
 
@@ -84,11 +107,17 @@ async function createSessionStore({ nodeEnv, tableName, catalystApp } = {}) {
     };
   }
 
-  const app = catalystApp || catalyst.initializeApp({});
+  const getCatalystApp = catalystApp
+    ? () => catalystApp
+    : () => {
+        const request = requestContext.getStore();
+        if (!request) throw new Error('Catalyst session access requires an active AppSail request.');
+        return catalyst.initialize(request, { scope: 'admin' });
+      };
   return {
-    store: new CatalystSessionStore(app, tableName),
+    store: new CatalystSessionStore(getCatalystApp, tableName),
     close: async () => {}
   };
 }
 
-module.exports = { CatalystSessionStore, createSessionStore };
+module.exports = { CatalystSessionStore, createSessionStore, withCatalystRequestContext };

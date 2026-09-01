@@ -125,7 +125,7 @@ The SDK supplies system columns such as `ROWID`; do not create them manually. Cr
 4. Register the deployed HTTPS callback URL in the Zoho API Console and use that exact value for `ZOHO_REDIRECT_URI`.
 5. Deploy the AppSail service and verify `/api/health` returns `{"status":"ok"}`.
 
-AppSail injects the Catalyst project configuration used by the official Node SDK. The application stores only server-side login sessions in Data Store; CRM records remain authoritative in Zoho CRM.
+AppSail injects Catalyst project and admin credentials into each request. The session store initializes the official Node SDK from those request headers. The application stores only server-side login sessions in Data Store; CRM records remain authoritative in Zoho CRM.
 
 ## Validation
 
