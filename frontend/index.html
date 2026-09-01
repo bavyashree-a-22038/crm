@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A compact Zoho CRM workspace.">
+  <meta name="theme-color" content="#0b0f0e">
+  <title>Mini CRM</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="app-shell landing-shell">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <a class="brand" href="/" aria-label="Mini CRM home">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <span>Mini CRM</span>
+      </a>
+      <nav class="nav-list">
+        <button id="home-nav" class="nav-item active" type="button">Home</button>
+        <button id="analytics-nav" class="nav-item hidden" type="button">Analytics</button>
+        <div id="module-navigation" class="module-navigation hidden">
+          <button id="modules-toggle" class="nav-item modules-toggle" type="button" aria-expanded="false" aria-controls="module-list">
+            <span>Modules</span><span class="toggle-mark" aria-hidden="true">+</span>
+          </button>
+          <div id="module-list" class="module-list hidden" aria-live="polite"></div>
+        </div>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="connection-label">Not connected</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <p class="eyebrow" id="topbar-context">Mini CRM</p>
+        <button id="logout-button" class="button button-secondary hidden" type="button">Sign out</button>
+      </header>
+
+      <section id="loading-view" class="center-stage" aria-live="polite">
+        <div class="loader" aria-hidden="true"></div>
+        <p>Checking your session...</p>
+      </section>
+
+      <section id="login-view" class="center-stage hidden">
+        <div class="login-panel">
+          <h1>Mini CRM.</h1>
+          <p class="lede">Connect your Zoho organization to begin.</p>
+          <a id="login-link" class="button button-primary" href="/api/auth/login">Continue with Zoho</a>
+          <p id="config-message" class="notice hidden" role="status"></p>
+          <p id="auth-error" class="error-message hidden" role="alert"></p>
+        </div>
+      </section>
+
+      <section id="home-view" class="workspace hidden">
+        <div class="home-header">
+          <div>
+            <h1>Good to see you.</h1>
+            <p id="user-summary" class="user-summary"></p>
+          </div>
+          <p id="module-summary" class="home-module-summary">Loading CRM snapshot...</p>
+        </div>
+        <div class="home-metrics" aria-label="CRM record snapshot">
+          <div class="home-metric"><strong id="home-record-count">–</strong><span>Records sampled</span></div>
+          <div class="home-metric"><strong id="home-recent-count">–</strong><span>Created in 30 days</span></div>
+          <div class="home-metric"><strong id="home-completeness">–</strong><span>Data completeness</span></div>
+          <div class="home-metric"><strong id="home-populated-count">–</strong><span>Records with data</span></div>
+        </div>
+        <div class="home-insights">
+          <section class="home-insight-panel">
+            <p class="section-label">Last six months</p>
+            <h2>Record creation activity</h2>
+            <div id="home-creation-trend" class="analytics-bars"></div>
+          </section>
+          <section id="home-category-panel" class="home-insight-panel hidden">
+            <p class="section-label">Record distribution</p>
+            <h2 id="home-category-title">Top categories</h2>
+            <div id="home-category-distribution" class="analytics-bars"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="module-view" class="records-workspace hidden">
+        <div class="records-header">
+          <div>
+            <h1 id="module-title">Records</h1>
+          </div>
+          <div class="records-header-actions">
+            <span id="record-count" class="record-count"></span>
+            <button id="create-record" class="button button-primary hidden" type="button">Create record</button>
+          </div>
+        </div>
+
+        <form id="search-form" class="search-bar" role="search">
+          <label class="sr-only" for="search-input">Search this module</label>
+          <input id="search-input" type="search" minlength="2" maxlength="100" placeholder="Search records" autocomplete="off">
+          <button class="button button-primary" type="submit">Search</button>
+          <button id="clear-search" class="button button-secondary hidden" type="button">Clear</button>
+        </form>
+
+        <div id="records-status" class="records-status" aria-live="polite"></div>
+        <div id="table-wrap" class="table-wrap hidden">
+          <table>
+            <thead><tr id="records-head"></tr></thead>
+            <tbody id="records-body"></tbody>
+          </table>
+        </div>
+
+        <div id="pagination" class="pagination hidden">
+          <button id="previous-page" class="icon-button" type="button" title="Previous page" aria-label="Previous page">&larr;</button>
+          <span id="page-label">Page 1</span>
+          <button id="next-page" class="icon-button" type="button" title="Next page" aria-label="Next page">&rarr;</button>
+        </div>
+      </section>
+
+      <section id="record-form-view" class="form-workspace hidden">
+        <div class="form-header">
+          <div>
+            <h1 id="record-form-title">Record</h1>
+          </div>
+        </div>
+        <form id="record-form" class="record-form">
+          <div class="record-form-scroll">
+            <p id="record-form-error" class="error-message hidden" role="alert" tabindex="-1"></p>
+            <div id="record-form-fields" class="record-form-fields"></div>
+          </div>
+          <div class="form-actions">
+            <button id="save-record" class="button button-primary" type="submit">Save</button>
+            <button id="cancel-record" class="button button-secondary" type="button">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="record-detail-view" class="detail-workspace hidden">
+        <div class="detail-header">
+          <div>
+            <h1 id="record-detail-title">Record</h1>
+          </div>
+          <div class="detail-actions">
+            <button id="edit-detail-record" class="button button-primary hidden" type="button">Edit</button>
+            <button id="close-record-detail" class="button button-secondary" type="button">Back to records</button>
+          </div>
+        </div>
+        <p id="record-detail-status" class="records-status" aria-live="polite"></p>
+        <div id="record-detail-fields" class="record-detail-content"></div>
+      </section>
+
+      <section id="analytics-view" class="analytics-workspace hidden">
+        <div class="analytics-header">
+          <div>
+            <p class="section-label">Live CRM signals</p>
+            <h1 id="analytics-title">Analytics</h1>
+          </div>
+          <div class="analytics-controls">
+            <label for="analytics-module">Module</label>
+            <select id="analytics-module"></select>
+            <button id="refresh-analytics" class="button button-secondary" type="button">Refresh</button>
+          </div>
+        </div>
+        <p id="analytics-empty" class="notice hidden">No modules are available for analysis.</p>
+        <p id="analytics-status" class="analytics-status" aria-live="polite"></p>
+        <div id="analytics-content" class="hidden">
+          <div class="metric-grid">
+            <div class="metric"><span>Records sampled</span><strong id="analytics-records">0</strong></div>
+            <div class="metric"><span>Created in 30 days</span><strong id="analytics-recent-records">0</strong></div>
+            <div class="metric"><span>Data completeness</span><strong id="analytics-completeness">0%</strong></div>
+            <div class="metric"><span>Records with data</span><strong id="analytics-populated-records">0</strong></div>
+          </div>
+          <div class="analytics-grid">
+            <section class="analytics-panel analytics-panel-wide">
+              <p class="section-label">Last six months</p>
+              <h2>Records created</h2>
+              <div id="creation-trend" class="analytics-bars"></div>
+            </section>
+            <section id="numeric-panel" class="analytics-panel hidden">
+              <p class="section-label">Numeric performance</p>
+              <h2 id="numeric-title">Value summary</h2>
+              <div class="numeric-summary">
+                <div><span>Total</span><strong id="numeric-total">0</strong></div>
+                <div><span>Average</span><strong id="numeric-average">0</strong></div>
+                <div><span>Range</span><strong id="numeric-range">0 – 0</strong></div>
+              </div>
+            </section>
+            <section id="picklist-panel" class="analytics-panel hidden">
+              <p class="section-label">Most populated category</p>
+              <h2 id="picklist-title">Distribution</h2>
+              <div id="picklist-distribution" class="analytics-bars"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <dialog id="delete-dialog" class="confirm-dialog">
+    <h2>Delete record</h2>
+    <p id="delete-message"></p>
+    <div class="form-actions">
+      <button id="confirm-delete" class="button button-danger" type="button">Delete</button>
+      <button id="cancel-delete" class="button button-secondary" type="button">Cancel</button>
+    </div>
+  </dialog>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

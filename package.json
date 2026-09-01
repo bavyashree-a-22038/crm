@@ -1,0 +1,24 @@
+{
+  "name": "catalyst-mini-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A framework-free Zoho CRM client prepared for Catalyst AppSail.",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "check": "node --check backend/server.js && node --check backend/middleware/auth.js && node --check backend/routes/analytics.js && node --check backend/routes/auth.js && node --check backend/routes/modules.js && node --check backend/routes/records.js && node --check backend/services/zohoAnalyticsService.js && node --check backend/services/zohoAuthService.js && node --check backend/services/zohoCrmService.js && node --check backend/services/zohoMetadataService.js && node --check backend/services/zohoRecordService.js && node --check backend/services/tokenStore.js && node --check frontend/js/analytics.js && node --check frontend/js/app.js && node --check frontend/js/api.js && node --check frontend/js/auth.js && node --check frontend/js/modules.js && node --check frontend/js/recordDetails.js && node --check frontend/js/recordForm.js && node --check frontend/js/records.js && node --check frontend/js/ui.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "connect-redis": "^9.0.0",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "redis": "^5.8.2"
+  }
+}
