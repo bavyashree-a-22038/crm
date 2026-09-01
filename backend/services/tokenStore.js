@@ -64,7 +64,7 @@ class CatalystSessionStore extends session.Store {
       throw new Error('Invalid session identifier.');
     }
     const result = await this.getCatalystApp().zcql().executeZCQLQuery(
-      `SELECT * FROM ${this.tableName} WHERE SESSION_ID = '${sessionId}' LIMIT 1`
+      `SELECT * FROM ${this.tableName} WHERE SESSION_ID = '${sessionId}' LIMIT 0, 1`
     );
     return result[0]?.[this.tableName] || null;
   }

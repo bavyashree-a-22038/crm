@@ -271,6 +271,10 @@ button, a, input { font: inherit; }
   text-align: center;
 }
 
+.login-panel h1 {
+  margin-inline: auto;
+}
+
 h1 {
   max-width: 14ch;
   margin: 12px 0;

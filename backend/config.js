@@ -9,7 +9,10 @@ function normalizeUrl(value, fallback) {
 
 const config = {
   nodeEnv,
-  port: Number.parseInt(process.env.PORT || (nodeEnv === 'production' ? '9000' : '3000'), 10),
+  port: Number.parseInt(
+    process.env.X_ZOHO_CATALYST_LISTEN_PORT || process.env.PORT || (nodeEnv === 'production' ? '9000' : '3000'),
+    10
+  ),
   trustProxy: process.env.TRUST_PROXY === 'true',
   sessionSecret: process.env.SESSION_SECRET || 'local-development-only-change-me',
   catalystSessionTable: process.env.SESSION_TABLE || 'MiniCrmSessions',

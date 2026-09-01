@@ -41,6 +41,7 @@ function createFakeCatalystApp() {
     zcql() {
       return {
         async executeZCQLQuery(query) {
+          assert.match(query, /LIMIT 0, 1$/);
           const sessionId = query.match(/SESSION_ID = '([^']+)'/)?.[1];
           const row = rows.find(({ SESSION_ID }) => SESSION_ID === sessionId);
           return row ? [{ MiniCrmSessions: row }] : [];

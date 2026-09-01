@@ -108,7 +108,7 @@ Access tokens are checked before every Zoho request. An expiring token is refres
 
 ## Catalyst AppSail deployment
 
-The checked-in `app-config.json` uses the Catalyst-managed Node.js 18 stack, runs `npm start`, and builds from the repository root. Express listens on `process.env.PORT` and `0.0.0.0`.
+The checked-in `app-config.json` uses the Catalyst-managed Node.js 18 stack, runs `npm start`, and builds from the repository root. Express listens on `process.env.X_ZOHO_CATALYST_LISTEN_PORT` and `0.0.0.0`, with local and production fallbacks.
 
 1. In the Catalyst console, create a Data Store table named `MiniCrmSessions` with these custom columns:
 
