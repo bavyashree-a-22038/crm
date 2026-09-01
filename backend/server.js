@@ -14,6 +14,13 @@ const { createSessionStore, withCatalystRequestContext } = require('./services/t
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+function setProductionForwardedProtocol(request, response, next) {
+  if (config.nodeEnv === 'production') {
+    request.headers['x-forwarded-proto'] = 'https';
+  }
+  next();
+}
+
 function requireSameOrigin(request, response, next) {
   if (SAFE_METHODS.has(request.method) || !request.get('origin')) return next();
 
@@ -65,6 +72,7 @@ async function createApp() {
     }
   }));
   app.use(express.json({ limit: '1mb' }));
+  app.use(setProductionForwardedProtocol);
   app.use(requireSameOrigin);
   app.use(withCatalystRequestContext);
   app.use(session({
@@ -125,4 +133,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { createApp, requireSameOrigin };
+module.exports = { createApp, requireSameOrigin, setProductionForwardedProtocol };

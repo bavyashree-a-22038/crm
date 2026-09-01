@@ -9,7 +9,7 @@ process.env.ZOHO_REDIRECT_URI = 'http://localhost:3000/api/auth/callback';
 process.env.ZOHO_ACCOUNTS_URL = 'https://accounts.zoho.com';
 process.env.ZOHO_CRM_API_URL = 'https://www.zohoapis.com';
 
-const { createApp } = require('../backend/server');
+const { createApp, setProductionForwardedProtocol } = require('../backend/server');
 const { config } = require('../backend/config');
 
 let app;
@@ -59,6 +59,19 @@ test('frontend is served with security headers', async () => {
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-security-policy'), /default-src 'self'/);
   assert.match(body, /Continue with Zoho/);
+});
+
+test('production requests are normalized to AppSail HTTPS', () => {
+  const originalNodeEnv = config.nodeEnv;
+  const request = { headers: { 'x-forwarded-proto': 'http' } };
+  config.nodeEnv = 'production';
+
+  try {
+    setProductionForwardedProtocol(request, {}, () => {});
+    assert.equal(request.headers['x-forwarded-proto'], 'https');
+  } finally {
+    config.nodeEnv = originalNodeEnv;
+  }
 });
 
 test('login creates a server session and redirects to documented Zoho parameters', async () => {
