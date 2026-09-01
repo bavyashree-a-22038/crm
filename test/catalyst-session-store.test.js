@@ -31,14 +31,8 @@ function createFakeCatalystApp() {
       if (index >= 0) rows.splice(index, 1);
       return index >= 0;
     },
-    async getPagedRows({ nextToken, maxRows }) {
-      const start = Number(nextToken || 0);
-      const data = rows.slice(start, start + maxRows);
-      const followingIndex = start + data.length;
-      return {
-        data,
-        next_token: followingIndex < rows.length ? String(followingIndex) : undefined
-      };
+    async *getIterableRows() {
+      for (const row of rows) yield row;
     }
   };
 

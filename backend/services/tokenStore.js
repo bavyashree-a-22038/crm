@@ -64,13 +64,9 @@ class CatalystSessionStore extends session.Store {
       throw new Error('Invalid session identifier.');
     }
     const table = this.getTable();
-    let nextToken;
-    do {
-      const page = await table.getPagedRows({ nextToken, maxRows: 200 });
-      const row = page.data.find(({ SESSION_ID }) => SESSION_ID === sessionId);
-      if (row) return row;
-      nextToken = page.next_token;
-    } while (nextToken);
+    for await (const row of table.getIterableRows()) {
+      if (row.SESSION_ID === sessionId) return row;
+    }
     return null;
   }
 
