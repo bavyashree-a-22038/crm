@@ -9,10 +9,10 @@ This checkpoint implements project setup, Zoho OAuth, dynamic modules and metada
 ```text
 Browser (frontend/) -> Express routes (backend/) -> Zoho Accounts / CRM APIs
 															|
-															-> server-side session store (Redis in production)
+											-> Catalyst Data Store sessions in production
 ```
 
-The browser receives only an opaque, HTTP-only session cookie. Access and refresh tokens are stored in the server-side session. Local development can use Express's in-memory session store; production startup refuses to run without `REDIS_URL` so AppSail instances do not depend on local files or process memory for OAuth state.
+The browser receives only an opaque, HTTP-only session cookie. Access and refresh tokens are stored in the server-side session. Local development uses Express's in-memory session store. AppSail production uses Catalyst Data Store so instances do not depend on local files or process memory for OAuth state.
 
 ## Project structure
 
@@ -26,7 +26,7 @@ backend/
 	routes/analytics.js         Authenticated module analytics endpoint
 	routes/modules.js           Read-only module and field metadata endpoints
 	routes/records.js           Record list, search, detail, and mutation endpoints
-	services/tokenStore.js      Redis or local development session store
+	services/tokenStore.js      Catalyst Data Store or local session store
 	services/zohoAnalyticsService.js Bounded record and metadata aggregation
 	services/zohoAuthService.js Zoho authorization, token, refresh, and revoke calls
 	services/zohoCrmService.js  Authenticated V8 requests with refresh and retry
@@ -110,21 +110,22 @@ Access tokens are checked before every Zoho request. An expiring token is refres
 
 The checked-in `app-config.json` uses the Catalyst-managed Node.js 18 stack, runs `npm start`, and builds from the repository root. Express listens on `process.env.PORT` and `0.0.0.0`.
 
-1. Install and authenticate the Catalyst CLI.
-2. Link this checkout to a real Catalyst project. This creates account-specific `.catalystrc`/`catalyst.json` data that cannot be prefilled generically:
+1. In the Catalyst console, create a Data Store table named `MiniCrmSessions` with these custom columns:
 
-```sh
-catalyst init --project <project_id>
-catalyst appsail:add --name crm-api --stack node18 --source "$PWD"
+```text
+SESSION_ID    Var Char  Unique and mandatory
+SESSION_DATA  Text      Mandatory
+EXPIRES_AT    BigInt    Mandatory
 ```
 
-Keep the existing `app-config.json` when prompted.
+The SDK supplies system columns such as `ROWID`; do not create them manually. Create the table in every Catalyst environment where AppSail will run.
 
-3. Configure `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REDIRECT_URI`, `ZOHO_ACCOUNTS_URL`, `ZOHO_CRM_API_URL`, `SESSION_SECRET`, `REDIS_URL`, and `NODE_ENV=production` as AppSail environment variables. Do not put secret values in `app-config.json` or commit `.env`.
+2. Connect the repository and `catalyst-crm` branch to AppSail, using the repository root as the build path. Keep the existing `app-config.json`.
+3. Configure `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REDIRECT_URI`, `ZOHO_ACCOUNTS_URL`, `ZOHO_CRM_API_URL`, `SESSION_SECRET`, `CATALYST_SESSION_TABLE=MiniCrmSessions`, `TRUST_PROXY=true`, and `NODE_ENV=production` as AppSail environment variables. Do not set `PORT`; AppSail supplies it. Do not put secret values in `app-config.json` or commit `.env`.
 4. Register the deployed HTTPS callback URL in the Zoho API Console and use that exact value for `ZOHO_REDIRECT_URI`.
-5. Deploy the linked AppSail service with the Catalyst CLI.
+5. Deploy the AppSail service and verify `/api/health` returns `{"status":"ok"}`.
 
-A shared Redis-compatible session service is required for production. It keeps OAuth state outside AppSail's local filesystem and supports multiple instances. If the selected Catalyst environment provides a different durable cache/session service, replace only `backend/services/tokenStore.js` while retaining the same Express session-store contract.
+AppSail injects the Catalyst project configuration used by the official Node SDK. The application stores only server-side login sessions in Data Store; CRM records remain authoritative in Zoho CRM.
 
 ## Validation
 

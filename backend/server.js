@@ -39,7 +39,10 @@ function requireSameOrigin(request, response, next) {
 
 async function createApp() {
   validateRuntimeConfig();
-  const sessionStore = await createSessionStore(config.redisUrl);
+  const sessionStore = await createSessionStore({
+    nodeEnv: config.nodeEnv,
+    tableName: config.catalystSessionTable
+  });
   const app = express();
 
   if (config.trustProxy || config.nodeEnv === 'production') {

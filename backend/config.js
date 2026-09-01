@@ -11,7 +11,7 @@ const config = {
   port: Number.parseInt(process.env.PORT || '3000', 10),
   trustProxy: process.env.TRUST_PROXY === 'true',
   sessionSecret: process.env.SESSION_SECRET || 'local-development-only-change-me',
-  redisUrl: process.env.REDIS_URL || '',
+  catalystSessionTable: process.env.CATALYST_SESSION_TABLE || 'MiniCrmSessions',
   zoho: {
     clientId: process.env.ZOHO_CLIENT_ID || '',
     clientSecret: process.env.ZOHO_CLIENT_SECRET || '',
@@ -36,9 +36,6 @@ function validateRuntimeConfig() {
   if (config.nodeEnv === 'production') {
     if (!process.env.SESSION_SECRET || config.sessionSecret.length < 32) {
       throw new Error('Production requires SESSION_SECRET with at least 32 characters.');
-    }
-    if (!config.redisUrl) {
-      throw new Error('Production requires REDIS_URL for shared server-side sessions.');
     }
   }
 }
