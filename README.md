@@ -121,7 +121,7 @@ EXPIRES_AT    BigInt    Mandatory
 The SDK supplies system columns such as `ROWID`; do not create them manually. Create the table in every Catalyst environment where AppSail will run.
 
 2. Connect the repository and `catalyst-crm` branch to AppSail, using the repository root as the build path. Keep the existing `app-config.json`.
-3. Configure `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REDIRECT_URI`, `ZOHO_ACCOUNTS_URL`, `ZOHO_CRM_API_URL`, `SESSION_SECRET`, `CATALYST_SESSION_TABLE=MiniCrmSessions`, `TRUST_PROXY=true`, and `NODE_ENV=production` as AppSail environment variables. Do not set `PORT`; AppSail supplies it. Do not put secret values in `app-config.json` or commit `.env`.
+3. Configure `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REDIRECT_URI`, `ZOHO_ACCOUNTS_URL`, `ZOHO_CRM_API_URL`, `SESSION_SECRET`, `SESSION_TABLE=MiniCrmSessions`, `TRUST_PROXY=true`, and `APP_ENV=production` as AppSail environment variables. Do not set `PORT`; AppSail supplies it. Do not put secret values in `app-config.json` or commit `.env`.
 4. Register the deployed HTTPS callback URL in the Zoho API Console and use that exact value for `ZOHO_REDIRECT_URI`.
 5. Deploy the AppSail service and verify `/api/health` returns `{"status":"ok"}`.
 

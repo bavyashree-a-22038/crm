@@ -7,11 +7,11 @@ function normalizeUrl(value, fallback) {
 }
 
 const config = {
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv: process.env.APP_ENV || process.env.NODE_ENV || 'development',
   port: Number.parseInt(process.env.PORT || '3000', 10),
   trustProxy: process.env.TRUST_PROXY === 'true',
   sessionSecret: process.env.SESSION_SECRET || 'local-development-only-change-me',
-  catalystSessionTable: process.env.CATALYST_SESSION_TABLE || 'MiniCrmSessions',
+  catalystSessionTable: process.env.SESSION_TABLE || 'MiniCrmSessions',
   zoho: {
     clientId: process.env.ZOHO_CLIENT_ID || '',
     clientSecret: process.env.ZOHO_CLIENT_SECRET || '',

@@ -9,7 +9,7 @@ class CatalystSessionStore extends session.Store {
   constructor(catalystApp, tableName = DEFAULT_SESSION_TABLE) {
     super();
     if (!TABLE_NAME_PATTERN.test(tableName)) {
-      throw new Error('CATALYST_SESSION_TABLE must be a valid Catalyst table name.');
+      throw new Error('SESSION_TABLE must be a valid Catalyst table name.');
     }
     this.tableName = tableName;
     this.table = catalystApp.datastore().table(tableName);
